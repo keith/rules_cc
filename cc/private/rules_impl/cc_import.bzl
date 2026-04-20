@@ -188,6 +188,16 @@ def _cc_import_impl(ctx):
     merged_cc_info = cc_common.merge_cc_infos(direct_cc_infos = [this_cc_info], cc_infos = cc_infos)
 
     runfiles_list = []
+    if ctx.attr.shared_library:
+        shared_lib = ctx.attr.shared_library
+        if shared_lib[DefaultInfo].data_runfiles.files:
+            runfiles_list.append(shared_lib[DefaultInfo].data_runfiles)
+        else:
+            # This branch ensures interop with custom Starlark rules following
+            # https://bazel.build/extending/rules#runfiles_features_to_avoid
+            runfiles_list.append(ctx.runfiles(transitive_files = shared_lib[DefaultInfo].files))
+            runfiles_list.append(shared_lib[DefaultInfo].default_runfiles)
+
     for data_dep in ctx.attr.data:
         if data_dep[DefaultInfo].data_runfiles.files:
             runfiles_list.append(data_dep[DefaultInfo].data_runfiles)
